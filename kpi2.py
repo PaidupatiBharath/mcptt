@@ -2,8 +2,6 @@ import pyshark
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-from matplotlib import markers
 
 speed_of_light = 300000000
 cqi = { 1:(15, 0.9258),
@@ -121,10 +119,32 @@ print(" Mouth to Ear Latency is : ", M2E)
 print(f"Final Latency values after adding therotical latency : {final_list}")
 
 
+kpi2_value = 300
+count = 0
+for value in final_list:
+    if value < kpi2_value:
+        count +=1
+total_samples = (count/len(final_list)) * 100
+
+
+x = np.sort(final_list)
+#x = np.sort(number_of_samples)
+print(f"sorted_data M2E Latency : {x}")
+
+# For M2E theoritical latency
 plt.xlim(0,21)
 #plt.xticks(range(0,22,2))
 plt.scatter(distance, M2E, marker ="o")
 plt.show()
+
+#For Final M2E latency
+y = (np.arange(len(x)) / float(len(x)-1))*100
+plt.xlabel('Mouth to Ear Latency in milli Seconds')
+plt.ylabel('CDF in %')
+plt.title(f'KPI 2 - {total_samples} % values lies within 300ms')
+plt.plot(x, y, marker='o')
+plt.show()
+
 
 
 
