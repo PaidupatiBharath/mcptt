@@ -4,27 +4,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 speed_of_light = 300000000
-cqi = { 1:(15, 0.9258),
-        2:(15, 0.9258),
-        3:(15, 0.9258),
-        4:(14, 0.8525),
-        5:(14, 0.8525),
-        6:(13, 0.7539),
-        7:(12, 0.6504),
-        8:(12, 0.6504),
-        9:(12, 0.6504),
-        10:(11, 0.5537),
-        11:(10, 0.4551),
-        12:(9, 0.6016),
-        13:(9, 0.6016),
-        14:(8, 0.4785),
-        15:(7, 0.3691),
-        16:(6, 0.5879),
-        17:(5, 0.4385),
-        18:(4, 0.3008),
-        19:(3, 0.1885),
-        20:(2, 0.1172),
-        21:(1, 0.0762)
+cqi = { 1:23.85,
+        2:23.85,
+        3:23.85,
+        4:23.05,
+        5:23.05,
+        6:19.85,
+        7:19.85,
+        8:18.25,
+        9:18.25,
+        10:18.25,
+        11:18.25,
+        12:15.85,
+        13:15.85,
+        14:15.85,
+        15:14.25,
+        16:14.25,
+        17:12.65,
+        18:12.65,
+        19:8.85,
+        20:8.85,
+        21:6.6
         }
 
 
@@ -100,12 +100,13 @@ if phone == 1 or phone == 2:
     if distance in cqi.keys():
         Dprop = distance/speed_of_light
         packet_size = (tcp_packet+tcp_header)*8
-        modem_rate = cqi[distance][1] * 1024
+        modem_rate = cqi[distance]
         Dtrans = packet_size/modem_rate
         M2E = (hop+1)*Dprop + hop*Dtrans
         print(" Mouth to Ear Latency is : ", M2E)
+        print("Applied wideband codec rate :", cqi[distance])
     else:
-        print("The distance is not present in the CQI table")
+        print("The distance is not present in the table")
 else:
     print("The number is Invalid")
 
@@ -121,13 +122,18 @@ print(f"Final Latency values after adding therotical latency : {final_list}")
 
 kpi2_value = 300
 count = 0
+experimental_val = []
 for value in final_list:
     if value < kpi2_value:
         count +=1
+        experimental_val.append(value)
 total_samples = (count/len(final_list)) * 100
+experimental_samples = (count/len(experimental_val)) * 100
+
 
 
 x = np.sort(final_list)
+z = np.sort(experimental_val)
 #x = np.sort(number_of_samples)
 print(f"sorted_data M2E Latency : {x}")
 
@@ -144,6 +150,16 @@ plt.ylabel('CDF in %')
 plt.title(f'KPI 2 - {total_samples} % values lies within 300ms')
 plt.plot(x, y, marker='o')
 plt.show()
+
+
+#Experimental M2E for personal
+y = (np.arange(len(z)) / float(len(z)-1))*100
+plt.xlabel('Mouth to Ear Latency in milli Seconds')
+plt.ylabel('CDF in %')
+plt.title(f'KPI 2 - {experimental_samples} % values lies within 300ms')
+plt.plot(z, y, marker='o')
+plt.show()
+
 
 
 
