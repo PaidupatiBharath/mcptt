@@ -1,6 +1,9 @@
-from matplotlib import markers
-import matplotlib.pyplot as plt
+import pyshark
+from pathlib import Path
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib import markers
 
 speed_of_light = 300000000
 cqi = { 1:(15, 0.9258),
@@ -27,6 +30,63 @@ cqi = { 1:(15, 0.9258),
         }
 
 
+timestamp_at_mouth = []
+timestamp_at_ear = []
+initial_list = []
+final_list = []
+
+
+def GenericFilter(name_file, filter):
+	print("TLS filter : ", filter)
+	capture = pyshark.FileCapture(name_file, display_filter=filter)
+	#print(len(capture)) #Check why length is not working
+	packet_and_timestamp = []
+	for packet in capture:
+		packet_and_timestamp.append([packet.number, float(packet.frame_info.time_epoch)])
+	return(packet_and_timestamp)
+
+
+file_name = input("Enter the file name to consider for kpi 2 : ")
+current_path = Path.cwd()
+file_name = str(current_path) + "/" + file_name
+print(f" Path to pcap file : {file_name}")
+
+mouth_filter = "ip.src == 12.1.1.2 and ip.dst == 169.55.65.207 and tcp and frame.len == 426"
+ear_filter = "ip.src == 169.45.211.199 and ip.dst == 12.1.1.3 and tcp and frame.len == 426"
+
+timestamp_at_mouth = GenericFilter(file_name, mouth_filter)
+print(f" Packet number and timestamp for mouth latency : {timestamp_at_mouth}")
+timestamp_at_ear = GenericFilter(file_name, ear_filter)
+print(f" Packet number and timestamp for ear latency : {timestamp_at_ear}")
+
+total_mouth_packets = len(timestamp_at_mouth)
+total_ear_packets = len(timestamp_at_ear)
+print(f"Mouth packets : {total_mouth_packets} and Ear packets : {total_ear_packets}")
+
+for i in range(total_mouth_packets):
+    if i == total_mouth_packets-1:
+        for k in range(total_ear_packets):
+            if int(timestamp_at_mouth[i][0])<int(timestamp_at_ear[k][0]):
+                initial_list.append((float(timestamp_at_mouth[i][1]), float(timestamp_at_ear[k][1])))
+                break
+            else:
+                continue
+    else:
+        for j in range(total_ear_packets):
+            if int(timestamp_at_mouth[i][0])<int(timestamp_at_ear[j][0])<int(timestamp_at_mouth[i+1][0]):
+                initial_list.append((float(timestamp_at_mouth[i][1]), float(timestamp_at_ear[j][1])))
+                break
+            else:
+                continue
+print(initial_list)
+
+M2E_latency = []
+for h in initial_list:
+    M2E_latency.append((h[1]-h[0])*1000)
+
+print(f"Wireshark M2E latency values : {M2E_latency}")
+
+
 phone = int(input("""Transmitter Phone
             1. Xiaomi 
             2. Google 
@@ -51,11 +111,20 @@ if phone == 1 or phone == 2:
 else:
     print("The number is Invalid")
 
+
+for x in M2E_latency:
+    final_value = float(x)+float(M2E)
+    final_list.append(final_value)
+
+print(f"Wireshark M2E latency values : {M2E_latency}")
+print(" Mouth to Ear Latency is : ", M2E)
+print(f"Final Latency values after adding therotical latency : {final_list}")
+
+
 plt.xlim(0,21)
 #plt.xticks(range(0,22,2))
 plt.scatter(distance, M2E, marker ="o")
 plt.show()
-
 
 
 
