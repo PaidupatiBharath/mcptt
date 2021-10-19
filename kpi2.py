@@ -4,27 +4,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 speed_of_light = 300000000
-cqi = { 1:23.85,
-        2:23.85,
-        3:23.85,
-        4:23.05,
-        5:23.05,
-        6:19.85,
-        7:19.85,
-        8:18.25,
-        9:18.25,
-        10:18.25,
-        11:18.25,
-        12:15.85,
-        13:15.85,
-        14:15.85,
-        15:14.25,
-        16:14.25,
-        17:12.65,
-        18:12.65,
-        19:8.85,
-        20:8.85,
-        21:6.6
+cqi = { 0:2768,
+        1:4432,
+        2:7248,
+        3:10320,
+        4:12400,
+        5:13936,
+        6:15984,
+        7:31968,
+        8:39648,
+        9:51840,
+        10:61056,
+        11:98496,
+        12:119088,
+        13:137520,
+        14:164256,
+        15:183456
         }
 
 
@@ -91,20 +86,21 @@ phone = int(input("""Transmitter Phone
 Enter your input in number : """))
 if phone == 1 or phone == 2:
     if(phone == 1):
-        tcp_packet = 232
+        packet_size = 426
     elif(phone == 2):
-        tcp_packet = 356
-    tcp_header = 20    
-    hop= float(input("number of hops : "))
-    distance = int(input("Enter phone distance between 1 to 21 : "))
-    if distance in cqi.keys():
-        Dprop = distance/speed_of_light
-        packet_size = (tcp_packet+tcp_header)*8
-        modem_rate = cqi[distance]
+        packet_size = 426
+    hop= int(input("number of hops : "))
+    downlink_range = int(input("Enter downlink range distance : "))
+    cqi_value = int(input("Enter the CQI value from 0 to 15 : "))
+    uplink_range = downlink_range
+    Rmax = ((2*uplink_range)+((hop-1)*(downlink_range)))
+    if cqi_value in cqi.keys():
+        Dprop = Rmax/speed_of_light
+        modem_rate = cqi[cqi_value]
         Dtrans = packet_size/modem_rate
-        M2E = (hop+1)*Dprop + hop*Dtrans
+        M2E = ((hop+1)*Dprop + hop*Dtrans)*1000
         print(" Mouth to Ear Latency is : ", M2E)
-        print("Applied wideband codec rate :", cqi[distance])
+        print("Applied wideband codec rate :", cqi[cqi_value])
     else:
         print("The distance is not present in the table")
 else:
@@ -127,8 +123,15 @@ for value in final_list:
     if value < kpi2_value:
         count +=1
         experimental_val.append(value)
-total_samples = (count/len(final_list)) * 100
-experimental_samples = (count/len(experimental_val)) * 100
+if count != 0:
+    total_samples = (count/len(final_list)) * 100
+    experimental_samples = (count/len(experimental_val)) * 100
+else:
+    print("""
+    All values are greater than defined KPI values
+    so stopping the program
+    """)
+    exit()
 
 
 
@@ -138,9 +141,9 @@ z = np.sort(experimental_val)
 print(f"sorted_data M2E Latency : {x}")
 
 # For M2E theoritical latency
-plt.xlim(0,21)
+plt.xlim(0,Rmax)
 #plt.xticks(range(0,22,2))
-plt.scatter(distance, M2E, marker ="o")
+plt.scatter(Rmax, M2E, marker ="o")
 plt.show()
 
 #For Final M2E latency
