@@ -71,9 +71,17 @@ print(initial_list)
 print(f"Length of list {len(initial_list)}")
 
 final_list = []
+count = 0
+kpi_value = 100 #Define the kpi value
 for h in initial_list:
-    final_list.append((h[1]-h[0])*1000)
+    final_value = (h[1]-h[0])*1000
+    final_list.append(final_value)
+    if final_value < kpi_value:
+        count += 1
 print(f"Final KPI2 values : {final_list}")
+
+if count != 0:
+    total_samples = (count/len(final_list))*100
 
 number_of_samples = len(final_list)
 x = np.sort(final_list)
@@ -82,7 +90,7 @@ print(f"sorted_data for floor control : {x}")
 y = (np.arange(len(x)) / float(len(x)-1))*100
 plt.xlabel('E2E Latency in milli Seconds')
 plt.ylabel('CDF in %')
-plt.title('KPI 3')
+plt.title(f'KPI 3 - {total_samples} % values lies within {kpi_value}ms')
 plt.plot(x, y, marker='o')
 #plt.xticks([0.5,1,1.5,2,2.5,3,3.5,4,4.5])
 plt.show()
